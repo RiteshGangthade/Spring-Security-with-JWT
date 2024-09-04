@@ -22,9 +22,12 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable())
                 .authorizeRequests().
-                requestMatchers("/test").authenticated().requestMatchers("/auth/login").permitAll()
-                .anyRequest()
-                .authenticated()
+                requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/user/**").hasRole("USER")
+//                .requestMatchers("/test").authenticated()
+//                .requestMatchers("/auth/register").permitAll()
+//                .requestMatchers("/auth/login").permitAll()
+                .anyRequest().authenticated()
                 .and().exceptionHandling(ex -> ex.authenticationEntryPoint(point))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);

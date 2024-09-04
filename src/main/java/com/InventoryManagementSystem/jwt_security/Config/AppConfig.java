@@ -1,5 +1,8 @@
 package com.InventoryManagementSystem.jwt_security.Config;
 
+import com.InventoryManagementSystem.jwt_security.Repository.UserRepository;
+import com.InventoryManagementSystem.jwt_security.Service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,15 +18,12 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 @Configuration
 public class AppConfig {
 
-
+    @Autowired
+    private UserRepository userRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {
-        UserDetails userDetails = User.builder().
-                username("USER")
-                .password(passwordEncoder().encode("123")).roles("ADMIN").
-                build();
-        return new InMemoryUserDetailsManager(userDetails);
+        return new CustomUserDetailsService(userRepository);
     }
 
     @Bean

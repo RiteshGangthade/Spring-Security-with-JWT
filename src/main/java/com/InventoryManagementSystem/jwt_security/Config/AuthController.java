@@ -2,6 +2,8 @@ package com.InventoryManagementSystem.jwt_security.Config;
 
 import com.InventoryManagementSystem.jwt_security.Model.JwtRequest;
 import com.InventoryManagementSystem.jwt_security.Model.JwtResponse;
+import com.InventoryManagementSystem.jwt_security.Model.User;
+import com.InventoryManagementSystem.jwt_security.Repository.UserRepository;
 import com.InventoryManagementSystem.jwt_security.Security.JwtHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,15 +15,22 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+    @Autowired
+    private UserRepository userRepository;
+
+
     @Autowired
     private UserDetailsService userDetailsService;
 
@@ -32,8 +41,32 @@ public class AuthController {
     @Autowired
     private JwtHelper helper;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     private Logger logger = LoggerFactory.getLogger(AuthController.class);
 
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody User user) {
+        // Check if the username is already taken
+        if (userRepository.existsByUsername(user.getUsername())) {
+            return ResponseEntity.badRequest().body("Username is already taken");
+        }
+
+        // Encode the user's password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        // Set default roles if none are provided
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            user.setRoles(Collections.singletonList("ROLE_USER")); // Default role
+        }
+
+        // Save the user to the repository
+        userRepository.save(user);
+
+        return ResponseEntity.ok("User registered successfully");
+    }
 
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest request) {
